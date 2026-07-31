@@ -5,9 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "email-validator>=2.3.0",
     "fastapi>=0.141.1",
     "httpx>=0.28.1",
     "pydantic-settings>=2.14.2",
     "python-dotenv>=1.2.2",
     "uvicorn>=0.52.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
 ]

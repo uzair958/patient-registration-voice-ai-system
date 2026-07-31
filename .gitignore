@@ -61,3 +61,7 @@ htmlcov/
 # =========================
 *.pem
 *.key
+
+.env
+.env.*
+!.env.example
