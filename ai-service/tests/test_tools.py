@@ -1,4 +1,5 @@
 import httpx
+import json
 import pytest
 from unittest.mock import AsyncMock, patch
 
@@ -15,6 +16,27 @@ def mock_response(status_code: int, json_data: dict):
         status_code=status_code,
         json=json_data,
     )
+
+
+def vapi_payload(name: str, arguments: dict):
+    return {
+        "message": {
+            "type": "tool-calls",
+            "toolWithToolCallList": [
+                {
+                    "tool": {},
+                    "toolCall": {
+                        "id": "call_123",
+                        "type": "function",
+                        "function": {
+                            "name": name,
+                            "arguments": arguments,
+                        },
+                    },
+                }
+            ],
+        }
+    }
 
 
 class TestLookupPatient:
@@ -43,20 +65,19 @@ class TestLookupPatient:
 
         response = client.post(
             "/tools/patient/lookup",
-            json={
+            json=vapi_payload("lookup_patient", {
                 "phone_number": "4155551234",
-            },
+            }),
         )
 
         assert response.status_code == 200
 
-        data = response.json()
+        result = response.json()["results"][0]["result"]
 
-        assert data["found"] is True
-        assert data["patient"]["patient_id"] == "123"
-        assert data["patient"]["first_name"] == "John"
-        assert data["patient"]["last_name"] == "Smith"
-        assert data["error"] is None
+        assert "found: true" in result
+        assert "patient_id: 123" in result
+        assert "first_name: John" in result
+        assert "last_name: Smith" in result
 
         mock_lookup.assert_awaited_once_with(
             "4155551234"
@@ -80,18 +101,16 @@ class TestLookupPatient:
 
         response = client.post(
             "/tools/patient/lookup",
-            json={
+            json=vapi_payload("lookup_patient", {
                 "phone_number": "4155551234",
-            },
+            }),
         )
 
         assert response.status_code == 200
 
-        data = response.json()
+        result = response.json()["results"][0]["result"]
 
-        assert data["found"] is False
-        assert data["patient"] is None
-        assert data["error"] is None
+        assert result == "found: false"
 
     @patch(
         "app.api.tools.patient_service.find_patient_by_phone",
@@ -111,20 +130,16 @@ class TestLookupPatient:
 
         response = client.post(
             "/tools/patient/lookup",
-            json={
+            json=vapi_payload("lookup_patient", {
                 "phone_number": "4155551234",
-            },
+            }),
         )
 
         assert response.status_code == 200
 
-        data = response.json()
+        result = response.json()["results"][0]["result"]
 
-        assert data["found"] is False
-        assert data["patient"] is None
-        assert data["error"] == (
-            "Unable to query patient records."
-        )
+        assert result == "error: Unable to query patient records."
 
     @patch(
         "app.api.tools.patient_service.find_patient_by_phone",
@@ -140,20 +155,16 @@ class TestLookupPatient:
 
         response = client.post(
             "/tools/patient/lookup",
-            json={
+            json=vapi_payload("lookup_patient", {
                 "phone_number": "4155551234",
-            },
+            }),
         )
 
         assert response.status_code == 200
 
-        data = response.json()
+        result = response.json()["results"][0]["result"]
 
-        assert data["found"] is False
-        assert data["patient"] is None
-        assert data["error"] == (
-            "Patient service temporarily unavailable."
-        )
+        assert result == "error: Patient service temporarily unavailable."
 
 
 class TestCreatePatient:
@@ -194,15 +205,14 @@ class TestCreatePatient:
 
         response = client.post(
             "/tools/patient/create",
-            json=valid_patient,
+            json=vapi_payload("create_patient", valid_patient),
         )
 
         assert response.status_code == 200
 
-        data = response.json()
+        result = response.json()["results"][0]["result"]
 
-        assert data["success"] is True
-        assert data["patient_id"] == "123"
+        assert result == "success: true, patient_id: 123"
         
 
     @patch(
@@ -228,15 +238,15 @@ class TestCreatePatient:
 
         response = client.post(
             "/tools/patient/create",
-            json=valid_patient,
+            json=vapi_payload("create_patient", valid_patient),
         )
 
         assert response.status_code == 200
 
-        data = response.json()
+        result = response.json()["results"][0]["result"]
 
-        assert data["success"] is False
-        assert "phone_number" in data["error"]["error"]
+        assert result.startswith("error:")
+        assert "phone_number" in result
 
 
 class TestUpdatePatient:
@@ -261,20 +271,19 @@ class TestUpdatePatient:
 
         response = client.post(
             "/tools/patient/update",
-            json={
+            json=vapi_payload("update_patient", {
                 "patient_id": "123",
                 "changes": {
                     "email": "updated@example.com",
                 },
-            },
+            }),
         )
 
         assert response.status_code == 200
 
-        data = response.json()
+        result = response.json()["results"][0]["result"]
 
-        assert data["success"] is True
-        assert data["patient_id"] == "123"
+        assert result == "success: true, patient_id: 123"
         
 
     @patch(
@@ -295,17 +304,17 @@ class TestUpdatePatient:
 
         response = client.post(
             "/tools/patient/update",
-            json={
+            json=vapi_payload("update_patient", {
                 "patient_id": "123",
                 "changes": {
                     "email": "updated@example.com",
                 },
-            },
+            }),
         )
 
         assert response.status_code == 200
 
-        data = response.json()
+        result = response.json()["results"][0]["result"]
 
-        assert data["success"] is False
-        assert data["error"]["error"] == "Patient not found."
+        assert result.startswith("error:")
+        assert "Patient not found" in result

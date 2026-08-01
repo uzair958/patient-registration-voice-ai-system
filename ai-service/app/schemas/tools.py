@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Any, List, Dict, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.patient import PatientCreate
 
@@ -16,3 +16,6 @@ class CreatePatientRequest(PatientCreate):
 class UpdatePatientRequest(BaseModel):
     patient_id: str
     changes: dict[str, Any]
+
+
+
