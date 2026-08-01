@@ -19,8 +19,10 @@ The live dashboard allows authorized users to view, search, and manage registere
 ### ⚙️ Live API Services
 
 **Django Backend:** `https://patient-registration-voice-ai-system.onrender.com`
+**Swagger Docs:** `https://patient-registration-voice-ai-system.onrender.com/docs`
 
 **AI Service:** `https://patient-registration-voice-ai-system-ai.onrender.com`
+**Swagger Docs:** `https://patient-registration-voice-ai-system-ai.onrender.com/docs`
 
 > Replace the placeholder URLs above with your deployed frontend, Django backend, and FastAPI service URLs.
 
