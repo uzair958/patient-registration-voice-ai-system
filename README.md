@@ -1,92 +1,345 @@
 # AI Patient Registration System
 
-A full-stack, AI-powered patient registration and management system. This project integrates a voice-based AI assistant (via Vapi) with a modern web dashboard and a robust backend to seamlessly register, lookup, and manage patient information over the phone.
+A full-stack, AI-powered patient registration and management system. The project integrates a voice-based AI assistant via Vapi with a modern web dashboard and robust backend services to seamlessly register, look up, update, and manage patient information through natural voice conversations.
+
+## 🌐 Live Demo
+
+### 📞 Voice AI Patient Registration
+
+**Vapi Phone Number:** **+1 (346) 209-5384**
+
+Call the number above to interact with the AI Patient Registration Assistant and complete a patient registration through voice.
+
+### 🖥️ Live Dashboard
+
+**Frontend:** `https://patient-registration-voice-ai-system-1.onrender.com`
+
+The live dashboard allows authorized users to view, search, and manage registered patient records.
+
+### ⚙️ Live API Services
+
+**Django Backend:** `https://patient-registration-voice-ai-system.onrender.com`
+
+**AI Service:** `https://patient-registration-voice-ai-system-ai.onrender.com`
+
+> Replace the placeholder URLs above with your deployed frontend, Django backend, and FastAPI service URLs.
+
+---
 
 ## 🏗 Architecture Overview
 
 The system is composed of three main services:
 
-1. **Frontend Dashboard (`/frontend/react-app`)**: A React/Vite web application that provides a modern, responsive UI for clinical staff to view, search, and manage registered patients.
-2. **Core Backend (`/backend`)**: A Django application backed by a MySQL database. It exposes RESTful APIs to manage patient records securely.
-3. **AI Service (`/ai-service`)**: A FastAPI middleware service that acts as the bridge between the external Vapi AI Assistant and the Core Backend. It exposes custom tool endpoints (`/create`, `/lookup`, `/update`) that Vapi uses to interact with the database during active voice calls.
+1. **Frontend Dashboard (`/frontend/react-app`)**
+   A React/Vite web application providing a modern, responsive interface for clinical staff to view, search, and manage registered patients.
+
+2. **Core Backend (`/backend`)**
+   A Django application backed by MySQL. It exposes RESTful APIs for securely managing patient records.
+
+3. **AI Service (`/ai-service`)**
+   A FastAPI middleware service that acts as the bridge between the external Vapi AI Assistant and the Core Backend. It exposes custom tool endpoints such as `/create`, `/lookup`, and `/update`, which Vapi uses during active voice calls.
+
+### System Flow
+
+```text
+Patient
+   │
+   │ Phone Call
+   ▼
+Vapi Voice AI
+   │
+   │ Tool Calls
+   ▼
+FastAPI AI Service
+   │
+   │ HTTP Requests
+   ▼
+Django REST API
+   │
+   ▼
+MySQL Database
+   │
+   │
+   └──────────────► React Dashboard
+```
+
+---
 
 ## 🚀 Features
 
-- **Voice AI Registration**: Patients can call a phone number and talk to an AI assistant that seamlessly extracts their details and saves them to the database in real-time.
-- **Real-time Dashboard**: A premium, responsive React dashboard to view active patient records, search by demographics, and manage data.
-- **Resilient AI Tooling**: The AI service uses robust Pydantic schemas and manual JSON parsing to handle LLM hallucinations and varied data formats perfectly.
+* **Voice AI Registration** — Patients can call the Vapi phone number and interact with an AI assistant that collects their information through natural conversation.
+* **Automated Patient Data Extraction** — The AI extracts required patient information and sends structured data to the backend.
+* **Patient Lookup** — Existing patient records can be retrieved using the AI assistant.
+* **Patient Updates** — Patient information can be updated through voice interactions.
+* **Real-time Dashboard** — A responsive React dashboard for viewing, searching, and managing patient records.
+* **RESTful Backend** — Django-powered API for patient data management.
+* **AI Middleware** — FastAPI service that connects Vapi's voice agent with the Django backend.
+* **Robust AI Tooling** — Pydantic schemas and validation help handle inconsistent AI-generated tool arguments and data formats.
+* **MySQL Database** — Persistent storage for patient records.
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+* React
+* TypeScript
+* Vite
+
+### Backend
+
+* Django
+* Django REST Framework
+* MySQL
+
+### AI Service
+
+* FastAPI
+* Pydantic
+* Python
+* Vapi
+
+### Development & Infrastructure
+
+* uv
+* ngrok
+* Git / GitHub
 
 ---
 
 ## 🛠 Prerequisites
 
 Before running the project locally, ensure you have the following installed:
-- [Python 3.10+](https://www.python.org/)
-- [Node.js 18+](https://nodejs.org/)
-- [MySQL Server](https://dev.mysql.com/downloads/)
-- [uv](https://github.com/astral-sh/uv) (Extremely fast Python package installer and resolver)
-- [ngrok](https://ngrok.com/) (For exposing the AI Service to Vapi)
+
+* [Python 3.10+](https://www.python.org/)
+* [Node.js 18+](https://nodejs.org/)
+* [MySQL Server](https://dev.mysql.com/downloads/)
+* [uv](https://github.com/astral-sh/uv)
+* [ngrok](https://ngrok.com/)
 
 ---
 
-## ⚙️ Setup & Installation
+## ⚙️ Local Setup & Installation
 
 ### 1. Environment Configuration
-Copy the sample environment file in the root directory and configure it:
+
+Copy the sample environment file:
+
 ```bash
 cp .env.example .env
 ```
-Ensure your MySQL database credentials in `.env` are correct.
 
-### 2. Core Backend (Django)
-Set up the Django database and run the core API.
+Configure the required environment variables in `.env`, including your MySQL database credentials and service configuration.
+
+**Never commit `.env` or API keys to GitHub.**
+
+---
+
+### 2. Core Backend — Django
+
+Set up the Django database and start the backend:
+
 ```bash
 cd backend
 uv sync
 uv run python manage.py migrate
 uv run python manage.py runserver 8000
 ```
-The backend API will be available at `http://127.0.0.1:8000`.
 
-### 3. AI Service (FastAPI)
-The AI service needs to be running so the Vapi assistant can make tool calls.
+The backend API will be available at:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+### 3. AI Service — FastAPI
+
+Start the AI middleware:
+
 ```bash
 cd ai-service
 uv sync
 uv run uvicorn app.main:app --port 8001 --reload
 ```
-The AI service will be available at `http://127.0.0.1:8001`.
 
-**To connect Vapi:**
-Since Vapi is an external service, you must expose your local AI service using ngrok:
+The AI service will be available at:
+
+```text
+http://127.0.0.1:8001
+```
+
+### Exposing the AI Service to Vapi
+
+For local development, expose the FastAPI service using ngrok:
+
 ```bash
 ngrok http 8001
 ```
-Copy the forwarding URL (e.g., `https://<your-ngrok-id>.ngrok-free.app`) and configure your Vapi Custom Tools to point to `https://<your-ngrok-id>.ngrok-free.app/tools/patient/create` (and `/lookup`, `/update`).
 
-### 4. Frontend Dashboard (React)
-Start the Vite development server for the admin UI.
+Copy the HTTPS forwarding URL generated by ngrok:
+
+```text
+https://<your-ngrok-id>.ngrok-free.app
+```
+
+Configure the Vapi tools using the exposed URL:
+
+```text
+https://<your-ngrok-id>.ngrok-free.app/tools/patient/create
+https://<your-ngrok-id>.ngrok-free.app/tools/patient/lookup
+https://<your-ngrok-id>.ngrok-free.app/tools/patient/update
+```
+
+---
+
+### 4. Frontend Dashboard — React
+
+Start the React development server:
+
 ```bash
 cd frontend/react-app
 npm install
 npm run dev
 ```
-The dashboard will be available at `http://localhost:5173`.
+
+The dashboard will be available at:
+
+```text
+http://localhost:5173
+```
 
 ---
 
 ## 📞 Vapi AI Configuration
 
-To make the AI voice assistant work:
+The production voice assistant is accessible through:
+
+**📞 +1 (346) 209-5384**
+
+To configure the Vapi assistant:
+
 1. Create an assistant in the [Vapi Dashboard](https://dashboard.vapi.ai/).
-2. Add custom tools for `create_patient`, `lookup_patient`, and `update_patient`.
-3. Set the tool endpoints to your `ngrok` URL.
-4. Ensure the assistant prompt explicitly asks the user for the required fields (First Name, Last Name, DOB, Phone, Address, Sex) before calling the `create_patient` tool.
+2. Configure the assistant as a patient registration voice agent.
+3. Add custom tools:
+
+   * `create_patient`
+   * `lookup_patient`
+   * `update_patient`
+4. Configure each tool with the corresponding FastAPI endpoint.
+5. Connect the Vapi phone number to the assistant.
+6. Ensure the assistant collects the required patient information before calling `create_patient`.
+
+### Required Patient Information
+
+The registration workflow collects:
+
+* First Name
+* Last Name
+* Date of Birth
+* Phone Number
+* Address
+* Sex
+
+The assistant should confirm the information with the caller before submitting the final registration.
+
+---
 
 ## 🧪 Testing
 
-The AI service includes a robust pytest suite with mocked backend responses to ensure tool calls work reliably:
+The AI service includes a pytest suite with mocked backend responses to verify tool functionality.
+
+Run:
+
 ```bash
 cd ai-service
 uv run pytest -v
 ```
+
+---
+
+## 🔐 Security Considerations
+
+This project handles patient information, so production deployments should implement appropriate security controls.
+
+* Never commit API keys or database credentials.
+* Store secrets using environment variables or a dedicated secrets manager.
+* Use HTTPS for all production services.
+* Restrict CORS to trusted frontend origins.
+* Implement authentication and authorization for the dashboard.
+* Validate all patient data server-side.
+* Avoid exposing sensitive patient information in logs.
+* Use appropriate access controls for patient records.
+
+> **Important:** This project is intended as a technical demonstration unless it has been independently reviewed and configured to meet applicable healthcare privacy, security, and regulatory requirements.
+
+---
+
+## 📁 Project Structure
+
+```text
+ai-patient-registration/
+│
+├── frontend/
+│   └── react-app/
+│       └── React + Vite Dashboard
+│
+├── backend/
+│   └── Django REST API
+│
+├── ai-service/
+│   └── FastAPI AI Middleware
+│
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+---
+
+## 🔄 End-to-End Workflow
+
+```text
+1. Patient calls +1 (346) 209-5384
+                │
+                ▼
+2. Vapi receives the call
+                │
+                ▼
+3. AI assistant collects patient information
+                │
+                ▼
+4. Vapi invokes the appropriate tool
+                │
+                ▼
+5. FastAPI AI Service processes the request
+                │
+                ▼
+6. Django REST API handles database operations
+                │
+                ▼
+7. MySQL stores/retrieves patient information
+                │
+                ▼
+8. React Dashboard displays the patient record
+```
+
+---
+
+## 📌 Project Status
+
+**Status:** Live / Deployment Ready
+
+**Voice AI:** Vapi
+
+**Phone:** +1 (346) 209-5384
+
+**Frontend:** React + TypeScript + Vite
+
+**Backend:** Django + Django REST Framework
+
+**AI Middleware:** FastAPI
+
+**Database:** MySQL
