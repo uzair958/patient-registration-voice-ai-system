@@ -14,7 +14,7 @@ Call the number above to interact with the AI Patient Registration Assistant and
 
 **Frontend:** `https://patient-registration-voice-ai-system-1.onrender.com`
 
-The live dashboard allows authorized users to view, search, and manage registered patient records.
+The live dashboard allows users to view, search, and manage registered patient records.
 
 ### ⚙️ Live API Services
 
