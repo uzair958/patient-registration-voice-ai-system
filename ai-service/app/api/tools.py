@@ -66,7 +66,7 @@ async def handle_lookup(request: LookupPatientRequest) -> str:
     )
 
 
-from fastapi import Request
+from fastapi import Request, Response, status
 
 @router.post("/lookup")
 async def lookup_patient(request: Request):
@@ -108,7 +108,7 @@ async def create_patient_debug(request: Request):
     }
 
 
-async def handle_create(request: CreatePatientRequest) -> str:
+async def handle_create(request: CreatePatientRequest) -> dict:
     logger.info("Create patient payload received: %s", request.model_dump(mode="json"))
 
     try:
@@ -116,19 +116,27 @@ async def handle_create(request: CreatePatientRequest) -> str:
 
     except httpx.TimeoutException:
         logger.exception("Django API timeout during patient creation")
-        return "error: Patient service temporarily unavailable."
+        return {
+            "success": False,
+            "message": "Patient registration could not be completed due to a timeout. Please try again."
+        }
 
     except httpx.RequestError:
         logger.exception("Django API request failed")
-        return "error: Patient service temporarily unavailable."
+        return {
+            "success": False,
+            "message": "Patient registration could not be completed. Please try again."
+        }
 
     if response.status_code != 201:
         logger.warning(
             "Patient creation failed: status=%s",
             response.status_code,
         )
-        error_detail = response.json()
-        return f"error: {error_detail}"
+        return {
+            "success": False,
+            "message": "Patient registration could not be completed. Please try again."
+        }
 
     payload = response.json()
     patient_id = payload["data"]["patient_id"]
@@ -138,13 +146,18 @@ async def handle_create(request: CreatePatientRequest) -> str:
         patient_id,
     )
 
-    return f"success: true, patient_id: {patient_id}"
+    return {
+        "success": True,
+        "message": "Patient registered successfully.",
+        "patient": {"patient_id": patient_id}
+    }
 
 
 @router.post("/create")
-async def create_patient(request: Request):
+async def create_patient(request: Request, response: Response):
     payload = await request.json()
     results = []
+    has_error = False
     
     tool_calls = payload.get("message", {}).get("toolWithToolCallList", [])
     for item in tool_calls:
@@ -162,9 +175,18 @@ async def create_patient(request: Request):
         try:
             req_model = CreatePatientRequest(**args)
             result = await handle_create(req_model)
+            if isinstance(result, dict) and not result.get("success"):
+                has_error = True
             results.append({"toolCallId": tool_call_id, "result": result})
         except Exception as e:
-            results.append({"toolCallId": tool_call_id, "result": f"error: {e}"})
+            has_error = True
+            results.append({"toolCallId": tool_call_id, "result": {
+                "success": False,
+                "message": f"Patient registration could not be completed: {e}"
+            }})
+            
+    if has_error:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             
     return {"results": results}
 

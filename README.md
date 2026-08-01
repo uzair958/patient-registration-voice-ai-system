@@ -326,6 +326,14 @@ ai-patient-registration/
 8. React Dashboard displays the patient record
 ```
 
+## 🛠️ Troubleshooting
+
+### Phone Calls Failing to Register Patients (Timeout)
+If testing via Vapi's web interface works but real phone calls fail or pause, this is often due to **Render cold starts**. When instances sleep due to inactivity on the free tier, a phone call triggers both FastAPI and Django to wake up. Django cold starts often take 15-30 seconds.
+
+**Resolution:**
+The system is configured to handle these delays gracefully. The `httpx` client in the AI Service uses a 45-second read timeout (`ai-service/app/services/patient_service.py`), allowing the HTTP connection to remain open while Django boots. If you deploy on Render's free tier, expect the first call after a period of inactivity to pause for ~20 seconds during the registration step before succeeding.
+
 ---
 
 ## 📌 Project Status
